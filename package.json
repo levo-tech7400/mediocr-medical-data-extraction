@@ -4,7 +4,7 @@
   "description": "🏥 Intelligent Medical Data Extraction from PDF Reports | GDPR-Compliant | German Healthcare Standards | OCR Technology",
   "main": "src/index.html",
   "scripts": {
-    "dev": "python -m http.server 8000 --directory src",
+    "dev": "http-server src -p 8000 -o",
     "build": "echo 'Build completed - Static files ready for deployment'",
     "deploy": "gh-pages -d src",
     "test": "echo 'Tests will be implemented in future versions'",
@@ -13,7 +13,7 @@
   },
   "keywords": [
     "medical",
-    "ocr", 
+    "ocr",
     "pdf",
     "healthcare",
     "gdpr",
@@ -59,9 +59,9 @@
     "not ie 11"
   ],
   "devDependencies": {
-    "gh-pages": "^4.0.0"
+    "gh-pages": "^4.0.0",
+    "http-server": "^14.1.1"
   },
-  "dependencies": {},
   "funding": {
     "type": "individual",
     "url": "https://github.com/sponsors/levo-tech7400"
@@ -74,10 +74,27 @@
   },
   "meta": {
     "project_type": "healthcare-software",
-    "compliance": ["GDPR", "DIN-58931"],
-    "languages": ["Turkish", "German", "English"],
-    "target_markets": ["Germany", "Austria", "Switzerland", "Finland"],
-    "technical_stack": ["HTML5", "CSS3", "JavaScript", "Chart.js"],
+    "compliance": [
+      "GDPR",
+      "DIN-58931"
+    ],
+    "languages": [
+      "Turkish",
+      "German",
+      "English"
+    ],
+    "target_markets": [
+      "Germany",
+      "Austria",
+      "Switzerland",
+      "Finland"
+    ],
+    "technical_stack": [
+      "HTML5",
+      "CSS3",
+      "JavaScript",
+      "Chart.js"
+    ],
     "company": "TECH7400 LIMITED (UK #16534859)"
   }
 }
