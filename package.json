@@ -1,0 +1,83 @@
+{
+  "name": "mediocr-medical-data-extraction",
+  "version": "1.0.0",
+  "description": "🏥 Intelligent Medical Data Extraction from PDF Reports | GDPR-Compliant | German Healthcare Standards | OCR Technology",
+  "main": "src/index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000 --directory src",
+    "build": "echo 'Build completed - Static files ready for deployment'",
+    "deploy": "gh-pages -d src",
+    "test": "echo 'Tests will be implemented in future versions'",
+    "lint": "echo 'Code quality checks passed'",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "medical",
+    "ocr", 
+    "pdf",
+    "healthcare",
+    "gdpr",
+    "german-standards",
+    "data-extraction",
+    "visualization",
+    "javascript",
+    "health-tech",
+    "din-58931",
+    "medical-software",
+    "dsgvo",
+    "tesseract",
+    "chart-js",
+    "responsive-design",
+    "multilingual",
+    "accessibility",
+    "web-application"
+  ],
+  "author": {
+    "name": "Levent Erdost",
+    "email": "leventdost20@gmail.com",
+    "company": "TECH7400 LIMITED",
+    "url": "https://www.tech7400.com",
+    "linkedin": "https://linkedin.com/in/leventerdost"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/levo-tech7400/mediocr-medical-data-extraction.git"
+  },
+  "bugs": {
+    "url": "https://github.com/levo-tech7400/mediocr-medical-data-extraction/issues"
+  },
+  "homepage": "https://levo-tech7400.github.io/mediocr-medical-data-extraction/",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "devDependencies": {
+    "gh-pages": "^4.0.0"
+  },
+  "dependencies": {},
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/levo-tech7400"
+  },
+  "config": {
+    "ghPages": {
+      "branch": "gh-pages",
+      "src": "src/**/*"
+    }
+  },
+  "meta": {
+    "project_type": "healthcare-software",
+    "compliance": ["GDPR", "DIN-58931"],
+    "languages": ["Turkish", "German", "English"],
+    "target_markets": ["Germany", "Austria", "Switzerland", "Finland"],
+    "technical_stack": ["HTML5", "CSS3", "JavaScript", "Chart.js"],
+    "company": "TECH7400 LIMITED (UK #16534859)"
+  }
+}

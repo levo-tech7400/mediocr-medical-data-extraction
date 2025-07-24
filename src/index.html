@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediOCR - Tıbbi Veri Çıkarma ve Analiz</title>
+    
+    <!-- Meta Tags for SEO and Social Media -->
+    <meta name="description" content="PDF tıbbi raporlardan akıllı veri çıkarma ve analiz sistemi. GDPR uyumlu, Alman sağlık standartları destekli OCR teknolojisi.">
+    <meta name="keywords" content="medical, ocr, pdf, healthcare, tıbbi analiz, veri çıkarma, sağlık teknolojisi">
+    <meta name="author" content="Levent Erdost - TECH7400 LIMITED">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://levo-tech7400.github.io/mediocr-medical-data-extraction/">
+    <meta property="og:title" content="MediOCR - Tıbbi Veri Çıkarma ve Analiz">
+    <meta property="og:description" content="PDF tıbbi raporlardan akıllı veri çıkarma ve analiz sistemi">
+    <meta property="og:image" content="https://levo-tech7400.github.io/mediocr-medical-data-extraction/screenshots/dashboard.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://levo-tech7400.github.io/mediocr-medical-data-extraction/">
+    <meta property="twitter:title" content="MediOCR - Tıbbi Veri Çıkarma ve Analiz">
+    <meta property="twitter:description" content="PDF tıbbi raporlardan akıllı veri çıkarma ve analiz sistemi">
+    <meta property="twitter:image" content="https://levo-tech7400.github.io/mediocr-medical-data-extraction/screenshots/dashboard.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .version-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .results-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .file-drop-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .file-drop-area:hover, .file-drop-area.dragover {
+            border-color: #764ba2;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .file-drop-area.processing {
+            border-color: #ffa726;
+            background: rgba(255, 167, 38, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .extracted-data {
+            margin-top: 20px;
+        }
+
+        .data-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .data-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .data-value {
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #c33;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #3c3;
+            display: none;
+        }
+
+        .medical-terms {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .term-highlight {
+            background: #ffeb3b;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .data-validation {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .validation-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .valid {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .invalid {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            margin: 0 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            color: #666;
+        }
+
+        .github-link {
+            display: inline-block;
+            background: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .github-link:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .main-panel {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .language-switcher {
+                position: relative;
+                top: auto;
+                right: auto;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="language-switcher">
+        <button class="lang-btn active" onclick="switchLanguage('tr')">🇹🇷 TR</button>
+        <button class="lang-btn" onclick="switchLanguage('de')">🇩🇪 DE</button>
+        <button class="lang-btn" onclick="switchLanguage('en')">🇬🇧 EN</button>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏥 MediOCR</h1>
+            <p>PDF Tıbbi Raporlardan Akıllı Veri Çıkarma ve Analiz Sistemi</p>
+            <div class="version-info">
+                v1.0 | TECH7400 LIMITED | Levent Erdost
+            </div>
+        </div>
+
+        <div class="main-panel">
+            <div class="upload-section">
+                <h2>📄 PDF Rapor Yükleme</h2>
+                
+                <div class="file-drop-area" id="dropArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>PDF dosyanızı buraya sürükleyin</h3>
+                    <p>veya dosya seçmek için tıklayın</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".pdf" multiple>
+                </div>
+
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="progressText">İşleniyor...</p>
+                </div>
+
+                <button class="btn" id="processBtn" onclick="processFiles()" disabled>
+                    🔍 OCR ile Veri Çıkar
+                </button>
+
+                <div class="loading-spinner" id="loadingSpinner"></div>
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+
+                <div class="medical-terms">
+                    <h4>🎯 Algılanabilir Veri Türleri:</h4>
+                    <ul>
+                        <li><span class="term-highlight">Kan değerleri</span> ve referans aralıkları</li>
+                        <li><span class="term-highlight">Tansiyon</span> ve vital bulgular</li>
+                        <li><span class="term-highlight">Görüntüleme</span> sonuçları (USG, PET, CT)</li>
+                        <li><span class="term-highlight">Tanı</span> ve tedavi bilgileri</li>
+                        <li><span class="term-highlight">İlaç</span> ve dozaj bilgileri</li>
+                        <li><span class="term-highlight">Tarih</span> ve hasta bilgileri</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('extracted')">📊 Çıkarılan Veriler</button>
+                    <button class="tab" onclick="showTab('charts')">📈 Görselleştirme</button>
+                    <button class="tab" onclick="showTab('analysis')">🔬 Analiz</button>
+                </div>
+
+                <div id="extracted" class="tab-content active">
+                    <h3>Çıkarılan Tıbbi Veriler</h3>
+                    <div class="extracted-data" id="extractedData">
+                        <p>Veri çıkarma işlemi için PDF dosyası yükleyin.</p>
+                    </div>
+                </div>
+
+                <div id="charts" class="tab-content">
+                    <h3>Veri Görselleştirme</h3>
+                    <div class="chart-container">
+                        <canvas id="trendChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="comparisonChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div id="analysis" class="tab-content">
+                    <h3>Akıllı Analiz Sonuçları</h3>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalValues">0</div>
+                            <div class="stat-label">Toplam Değer</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="abnormalValues">0</div>
+                            <div class="stat-label">Anormal Değer</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="timeSpan">0</div>
+                            <div class="stat-label">Gün Aralığı</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="reportCount">0</div>
+                            <div class="stat-label">Rapor Sayısı</div>
+                        </div>
+                    </div>
+                    <div id="analysisResults"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>MediOCR - Medical Data Extraction System</strong></p>
+            <p>Developed by <strong>Levent Erdost</strong> | TECH7400 LIMITED</p>
+            <a href="https://github.com/levo-tech7400/mediocr-medical-data-extraction" class="github-link" target="_blank">
+                📱 GitHub Repository
+            </a>
+            <a href="index-de.html" class="github-link">
+                🇩🇪 Deutsche Version
+            </a>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: #888;">
+                🔒 GDPR Uyumlu | 🏥 Tıbbi Gizlilik Korumalı | 🇹🇷 Türkiye Standartları
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = [];
+        let extractedData = [];
+        let trendChart = null;
+        let comparisonChart = null;
+
+        // Language translations
+        const translations = {
+            tr: {
+                title: "MediOCR - Tıbbi Veri Çıkarma",
+                subtitle: "PDF Tıbbi Raporlardan Akıllı Veri Çıkarma ve Analiz Sistemi",
+                uploadSection: "PDF Rapor Yükleme",
+                dragHere: "PDF dosyanızı buraya sürükleyin",
+                processing: "İşleniyor...",
+                startOCR: "OCR ile Veri Çıkar",
+                extractedData: "Çıkarılan Veriler",
+                visualization: "Görselleştirme", 
+                analysis: "Analiz",
+                totalValues: "Toplam Değer",
+                abnormalValues: "Anormal Değer",
+                timeSpan: "Gün Aralığı",
+                reportCount: "Rapor Sayısı"
+            },
+            de: {
+                title: "MediOCR - Medizinische Datenextraktion",
+                subtitle: "Intelligente Extraktion und Analyse medizinischer Daten aus PDF-Berichten",
+                uploadSection: "PDF-Bericht Upload",
+                dragHere: "PDF-Dateien hierher ziehen",
+                processing: "Verarbeitung läuft...",
+                startOCR: "OCR-Datenextraktion starten",
+                extractedData: "Extrahierte Daten",
+                visualization: "Visualisierung",
+                analysis: "Analyse", 
+                totalValues: "Gesamtwerte",
+                abnormalValues: "Auffällige Werte",
+                timeSpan: "Tage Zeitspanne",
+                reportCount: "Anzahl Berichte"
+            },
+            en: {
+                title: "MediOCR - Medical Data Extraction",
+                subtitle: "Intelligent extraction and analysis of medical data from PDF reports",
+                uploadSection: "PDF Report Upload",
+                dragHere: "Drag PDF files here",
+                processing: "Processing...",
+                startOCR: "Start OCR Data Extraction",
+                extractedData: "Extracted Data",
+                visualization: "Visualization",
+                analysis: "Analysis",
+                totalValues: "Total Values", 
+                abnormalValues: "Abnormal Values",
+                timeSpan: "Days Timespan",
+                reportCount: "Report Count"
+            }
+        };
+
+        // Drag & Drop functionality
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropArea.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropArea.classList.remove('dragover');
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+        dropArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFiles);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles({ target: { files: files } });
+        }
+
+        function handleFiles(e) {
+            const files = Array.from(e.target.files);
+            uploadedFiles = files.filter(file => file.type === 'application/pdf');
+            
+            if (uploadedFiles.length > 0) {
+                document.getElementById('processBtn').disabled = false;
+                dropArea.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <h3>${uploadedFiles.length} PDF dosyası seçildi</h3>
+                    <p>OCR işlemi için hazır</p>
+                `;
+                showSuccess(`${uploadedFiles.length} PDF dosyası başarıyla yüklendi.`);
+            } else {
+                showError('Lütfen geçerli PDF dosyaları seçin.');
+            }
+        }
+
+        // Simulated OCR Processing
+        async function processFiles() {
+            if (uploadedFiles.length === 0) return;
+
+            showLoading(true);
+            dropArea.classList.add('processing');
+            document.getElementById('processBtn').disabled = true;
+
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                const file = uploadedFiles[i];
+                updateProgress((i + 1) / uploadedFiles.length * 100, `${file.name} işleniyor...`);
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const mockData = generateMockMedicalData(file.name);
+                extractedData.push(...mockData);
+            }
+
+            showLoading(false);
+            dropArea.classList.remove('processing');
+            displayExtractedData();
+            updateCharts();
+            updateAnalysis();
+            showSuccess('Tüm PDF dosyaları başarıyla işlendi!');
+        }
+
+        function generateMockMedicalData(filename) {
+            const testTypes = ['Hemogram', 'Biyokimya', 'Hormone', 'Görüntüleme'];
+            const parameters = {
+                'Hemogram': [
+                    { name: 'Hemoglobin', value: Math.random() * 5 + 12, unit: 'g/dL', range: '12-16', normal: true },
+                    { name: 'Hematokrit', value: Math.random() * 10 + 35, unit: '%', range: '36-46', normal: true },
+                    { name: 'Lökosit', value: Math.random() * 3000 + 4000, unit: '/μL', range: '4000-10000', normal: true }
+                ],
+                'Biyokimya': [
+                    { name: 'Glukoz', value: Math.random() * 30 + 70, unit: 'mg/dL', range: '70-100', normal: true },
+                    { name: 'Kreatinin', value: Math.random() * 0.5 + 0.5, unit: 'mg/dL', range: '0.6-1.2', normal: true },
+                    { name: 'ALT', value: Math.random() * 20 + 10, unit: 'U/L', range: '10-40', normal: true }
+                ],
+                'Hormone': [
+                    { name: 'TSH', value: Math.random() * 3 + 0.5, unit: 'mU/L', range: '0.4-4.0', normal: true },
+                    { name: 'T4', value: Math.random() * 5 + 4, unit: 'μg/dL', range: '4.5-12', normal: true }
+                ],
+                'Görüntüleme': [
+                    { name: 'USG Bulgular', value: 'Normal ekojenite', unit: '', range: '', normal: true },
+                    { name: 'PET Sonucu', value: 'SUVmax: 2.1', unit: '', range: '<2.5', normal: true }
+                ]
+            };
+
+            const selectedType = testTypes[Math.floor(Math.random() * testTypes.length)];
+            const data = parameters[selectedType].map(param => ({
+                ...param,
+                date: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                source: filename,
+                category: selectedType,
+                validated: Math.random() > 0.1
+            }));
+
+            return data;
+        }
+
+        function displayExtractedData() {
+            const container = document.getElementById('extractedData');
+            container.innerHTML = '';
+
+            if (extractedData.length === 0) {
+                container.innerHTML = '<p>Henüz veri çıkarılmadı.</p>';
+                return;
+            }
+
+            const groupedData = extractedData.reduce((acc, item) => {
+                if (!acc[item.category]) acc[item.category] = [];
+                acc[item.category].push(item);
+                return acc;
+            }, {});
+
+            Object.entries(groupedData).forEach(([category, items]) => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.innerHTML = `
+                    <h4 style="color: #667eea; margin: 20px 0 10px 0;">📋 ${category}</h4>
+                `;
+
+                items.forEach(item => {
+                    const dataItem = document.createElement('div');
+                    dataItem.className = 'data-item';
+                    
+                    const isNormal = checkNormalRange(item.value, item.range);
+                    const validationClass = item.validated ? (isNormal ? 'valid' : 'warning') : 'invalid';
+                    
+                    dataItem.innerHTML = `
+                        <div class="data-label">${item.name}</div>
+                        <div class="data-value">
+                            ${typeof item.value === 'number' ? item.value.toFixed(2) : item.value} ${item.unit}
+                            ${item.range ? `(Normal: ${item.range})` : ''}
+                        </div>
+                        <div class="data-validation">
+                            <span class="validation-badge ${validationClass}">
+                                ${item.validated ? (isNormal ? '✓ Normal' : '⚠ Dikkat') : '❌ Doğrulanamadı'}
+                            </span>
+                            <small>📅 ${item.date} | 📄 ${item.source}</small>
+                        </div>
+                    `;
+                    categoryDiv.appendChild(dataItem);
+                });
+
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        function checkNormalRange(value, range) {
+            if (!range || typeof value !== 'number') return true;
+            
+            const rangeParts = range.match(/(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)/);
+            if (!rangeParts) return true;
+            
+            const min = parseFloat(rangeParts[1]);
+            const max = parseFloat(rangeParts[2]);
+            return value >= min && value <= max;
+        }
