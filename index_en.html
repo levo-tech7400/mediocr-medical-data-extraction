@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediOCR - Medical Data Extraction & Analysis</title>
+    <meta name="description" content="Intelligent medical data extraction from PDF reports. GDPR-compliant, German healthcare standards, OCR technology.">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; color: #333;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; color: white; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .version-info { background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 20px; display: inline-block; margin-top: 10px; font-size: 0.9rem; }
+        .language-switcher { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .lang-btn { background: rgba(255,255,255,0.9); border: 1px solid #ddd; padding: 8px 12px; margin: 0 2px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; font-weight: 500; }
+        .lang-btn.active { background: #667eea; color: white; border-color: #667eea; }
+        .main-panel { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-bottom: 30px; }
+        .upload-section, .results-section { background: rgba(255,255,255,0.95); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+        .file-drop-area { border: 3px dashed #667eea; border-radius: 10px; padding: 40px; text-align: center; transition: all 0.3s ease; cursor: pointer; margin-bottom: 20px; }
+        .file-drop-area:hover { border-color: #764ba2; background: rgba(102,126,234,0.1); transform: translateY(-2px); }
+        .upload-icon { font-size: 3rem; color: #667eea; margin-bottom: 15px; }
+        .file-input { display: none; }
+        .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 12px 25px; border: none; border-radius: 25px; cursor: pointer; font-size: 1rem; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102,126,234,0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .tabs { display: flex; margin-bottom: 20px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .tab { flex: 1; padding: 15px; background: #f8f9fa; border: none; cursor: pointer; transition: all 0.3s ease; font-weight: 600; }
+        .tab.active { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .footer { text-align: center; margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.9); border-radius: 10px; color: #666; }
+        .github-link { display: inline-block; background: #333; color: white; padding: 10px 20px; border-radius: 25px; text-decoration: none; margin: 10px; transition: all 0.3s ease; }
+        .github-link:hover { background: #555; transform: translateY(-2px); }
+        @media (max-width: 768px) { .main-panel { grid-template-columns: 1fr; } .header h1 { font-size: 2rem; } }
+    </style>
+</head>
+<body>
+    <div class="language-switcher">
+        <button class="lang-btn" onclick="switchLanguage('tr')">🇹🇷 TR</button>
+        <button class="lang-btn" onclick="switchLanguage('de')">🇩🇪 DE</button>
+        <button class="lang-btn active" onclick="switchLanguage('en')">🇬🇧 EN</button>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏥 MediOCR</h1>
+            <p>Intelligent Medical Data Extraction from PDF Reports</p>
+            <div class="version-info">v1.0 | TECH7400 LIMITED | Levent Erdost | English Version</div>
+        </div>
+
+        <div class="main-panel">
+            <div class="upload-section">
+                <h2>📄 PDF Report Upload</h2>
+                <div class="file-drop-area" id="dropArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drag your PDF files here</h3>
+                    <p>or click to select files</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".pdf" multiple>
+                </div>
+                <button class="btn" id="processBtn" onclick="processFiles()" disabled>🔍 Start OCR Data Extraction</button>
+                
+                <div style="background: #f0f8ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h4>🎯 Recognizable Data Types:</h4>
+                    <ul>
+                        <li><strong>Blood values</strong> and reference ranges</li>
+                        <li><strong>Blood pressure</strong> and vital signs</li>
+                        <li><strong>Imaging</strong> results (Ultrasound, PET, CT)</li>
+                        <li><strong>Diagnosis</strong> and treatment information</li>
+                        <li><strong>Medication</strong> and dosage information</li>
+                        <li><strong>Date</strong> and patient information</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('extracted')">📊 Extracted Data</button>
+                    <button class="tab" onclick="showTab('charts')">📈 Visualization</button>
+                    <button class="tab" onclick="showTab('analysis')">🔬 Analysis</button>
+                </div>
+
+                <div id="extracted" class="tab-content active">
+                    <h3>Extracted Medical Data</h3>
+                    <div id="extractedData">
+                        <p>Please upload PDF files to start data extraction.</p>
+                    </div>
+                </div>
+
+                <div id="charts" class="tab-content">
+                    <h3>Data Visualization</h3>
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <canvas id="trendChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div id="analysis" class="tab-content">
+                    <h3>Analysis Results</h3>
+                    <p>Analysis features will be displayed here after data extraction.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>MediOCR - English Version</strong></p>
+            <p>Developed by <strong>Levent Erdost</strong> | TECH7400 LIMITED</p>
+            <a href="https://github.com/levo-tech7400/mediocr-medical-data-extraction" class="github-link" target="_blank">📱 GitHub Repository</a>
+            <a href="index.html" class="github-link">🇹🇷 Turkish Version</a>
+            <a href="index-de.html" class="github-link">🇩🇪 German Version</a>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: #888;">🔒 GDPR Compliant • 🏥 Medical Privacy Protected • 🌍 EU Standards</p>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = [];
+        let extractedData = [];
+
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#764ba2', false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#667eea', false);
+        });
+
+        dropArea.addEventListener('drop', e => handleFiles({ target: { files: e.dataTransfer.files } }), false);
+        dropArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFiles);
+
+        function handleFiles(e) {
+            const files = Array.from(e.target.files);
+            uploadedFiles = files.filter(file => file.type === 'application/pdf');
+            
+            if (uploadedFiles.length > 0) {
+                document.getElementById('processBtn').disabled = false;
+                dropArea.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <h3>${uploadedFiles.length} PDF files selected</h3>
+                    <p>Ready for OCR processing</p>
+                `;
+            }
+        }
+
+        async function processFiles() {
+            if (uploadedFiles.length === 0) return;
+            
+            document.getElementById('processBtn').disabled = true;
+            
+            // Simulate processing
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Generate demo data
+            extractedData = [
+                { name: 'Hemoglobin', value: 14.2, unit: 'g/dL', range: '12-16', date: '2025-07-20', source: 'demo_blood.pdf', category: 'Hematology' },
+                { name: 'Glucose', value: 95, unit: 'mg/dL', range: '70-100', date: '2025-07-20', source: 'demo_chemistry.pdf', category: 'Clinical Chemistry' },
+                { name: 'TSH', value: 2.1, unit: 'mU/L', range: '0.4-4.0', date: '2025-07-18', source: 'demo_hormones.pdf', category: 'Endocrinology' }
+            ];
+            
+            displayData();
+        }
+
+        function displayData() {
+            const container = document.getElementById('extractedData');
+            container.innerHTML = extractedData.map(item => `
+                <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <div style="font-weight: bold; color: #667eea; margin-bottom: 5px;">${item.name}</div>
+                    <div style="font-size: 1.1rem; color: #333;">${item.value} ${item.unit} (Normal: ${item.range})</div>
+                    <small>📅 ${item.date} | 📄 ${item.source} | 📋 ${item.category}</small>
+                </div>
+            `).join('');
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab
